@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type ErrorRequestHandler, type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
@@ -30,5 +30,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+const errorHandler: ErrorRequestHandler = (error, req, res, _next): void => {
+  req.log.error({ err: error }, "Unhandled request error");
+  res.status(500).json({ error: "An unexpected server error occurred" });
+};
+
+app.use(errorHandler);
 
 export default app;

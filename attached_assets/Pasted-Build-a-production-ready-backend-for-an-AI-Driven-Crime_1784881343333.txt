@@ -1,0 +1,137 @@
+Build a production-ready backend for an AI-Driven Crime Analytics & Visualization Platform for the Karnataka State Police Hackathon.
+
+Tech Stack:
+- Python 3.12
+- FastAPI
+- SQLAlchemy ORM
+- SQLite (prototype database)
+- Pydantic
+- NetworkX
+- Pandas
+- Scikit-learn
+- ReportLab
+- Python-dotenv
+
+Project Name:
+CrimeLens AI
+
+The project must be modular, scalable, and follow clean architecture.
+
+Project Structure:
+
+backend/
+│
+├── app/
+│   ├── main.py
+│   ├── database.py
+│   ├── config.py
+│   ├── models/
+│   ├── schemas/
+│   ├── routes/
+│   ├── services/
+│   ├── utils/
+│   ├── data/
+│   └── ai/
+│
+├── requirements.txt
+├── README.md
+└── run.py
+
+Implement SQLAlchemy models for:
+
+1. Crime
+- id
+- fir_number
+- crime_type
+- description
+- district
+- police_station
+- latitude
+- longitude
+- date
+- time
+- status
+
+2. FIR
+- id
+- fir_number
+- investigation_status
+- investigating_officer
+- created_at
+
+3. Offender
+- id
+- name
+- age
+- gender
+- risk_score
+- modus_operandi
+- criminal_history
+
+4. Victim
+- id
+- name
+- age
+- gender
+
+5. PoliceStation
+- id
+- name
+- district
+
+6. Relationship
+- source_id
+- target_id
+- relationship_type
+- confidence_score
+
+Create FastAPI routes:
+
+GET /dashboard
+Return:
+- total crimes
+- active investigations
+- repeat offenders
+- hotspot districts
+- recent incidents
+
+GET /hotspots
+Return latitude, longitude, district, crime count for heatmap visualization.
+
+GET /network/{offender_id}
+Return nodes and edges for NetworkX graph visualization.
+
+GET /offender/{id}
+Return complete offender profile with crime history.
+
+POST /chat
+Accept natural language questions and return placeholder AI responses for now.
+
+GET /predict
+Return predicted hotspot district, crime type, risk score and reasoning.
+
+GET /health
+Return backend status.
+
+Create service files for:
+- dashboard_service
+- hotspot_service
+- graph_service
+- prediction_service
+- ai_service
+
+Generate mock data (50-100 records) automatically on first run.
+
+Enable CORS for React frontend running on localhost:5173.
+
+Create Swagger documentation.
+
+Create requirements.txt.
+
+Create README with setup instructions.
+
+The backend should run successfully using:
+
+uvicorn app.main:app --reload
+
+The code should be clean, modular, well-commented, and ready for future Gemini/OpenAI integration.

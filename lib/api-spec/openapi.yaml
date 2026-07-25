@@ -1,22 +1,25 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CrimeLens AI explainable crime intelligence API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: dashboard
+  - name: analytics
+  - name: network
+  - name: predictions
+  - name: ai
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +27,392 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Prototype role-based login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Overview metrics and recent incidents
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /hotspots:
+    get:
+      operationId: getHotspots
+      tags: [analytics]
+      summary: Geographic hotspot points
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Hotspot points for heatmaps
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Hotspot" }
+  /analytics/trends:
+    get:
+      operationId: getCrimeTrends
+      tags: [analytics]
+      summary: Crime trends by district and month
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Trend series
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrendAnalytics"
+  /analytics/categories:
+    get:
+      operationId: getCategoryDistribution
+      tags: [analytics]
+      summary: Crime category distribution
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Category counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CategoryCount" }
+  /analytics/offenders:
+    get:
+      operationId: getRepeatOffenderRanking
+      tags: [analytics]
+      summary: Repeat offender ranking
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Ranked offender risk data
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/OffenderRanking" }
+  /analytics/investigations:
+    get:
+      operationId: getInvestigationProgress
+      tags: [analytics]
+      summary: Investigation progress by status
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Investigation progress
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ProgressCount" }
+  /analytics/timeline:
+    get:
+      operationId: getCrimeTimeline
+      tags: [analytics]
+      summary: Chronological crime timeline
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CrimeEvent" }
+  /network/{offenderId}:
+    get:
+      operationId: getOffenderNetwork
+      tags: [network]
+      summary: React Flow/Cytoscape compatible offender network
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: offenderId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Graph nodes and edges
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NetworkGraph"
+  /offenders/{offenderId}:
+    get:
+      operationId: getOffender
+      tags: [network]
+      summary: Offender profile and crime history
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: offenderId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Offender profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OffenderProfile"
+  /predictions/hotspots:
+    get:
+      operationId: predictHotspot
+      tags: [predictions]
+      summary: Explainable hotspot prediction
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Explainable prediction
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Prediction" }
+  /predictions/offender-risk:
+    get:
+      operationId: predictOffenderRisk
+      tags: [predictions]
+      summary: Explainable repeat offender risk score
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Explainable prediction
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Prediction" }
+  /predictions/anomalies:
+    get:
+      operationId: detectAnomalies
+      tags: [predictions]
+      summary: Explainable anomaly detection
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Explainable prediction
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Prediction" }
+  /predictions/category-forecast:
+    get:
+      operationId: forecastCrimeCategory
+      tags: [predictions]
+      summary: Explainable category forecast
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Explainable prediction
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Prediction" }
+  /chat:
+    post:
+      operationId: askCrimeLens
+      tags: [ai]
+      summary: Ask CrimeLens an operational question
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatInput"
+      responses:
+        "200":
+          description: Explainable answer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatResponse" }
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     HealthStatus:
       type: object
+      required: [status, service]
       properties:
-        status:
+        status: { type: string }
+        service: { type: string }
+    LoginInput:
+      type: object
+      required: [username, role]
+      properties:
+        username: { type: string }
+        role:
           type: string
-      required:
-        - status
-
+          enum: [Admin, Investigator, Analyst, Supervisor]
+    AuthSession:
+      type: object
+      required: [token, user]
+      properties:
+        token: { type: string }
+        user:
+          type: object
+          required: [username, role]
+          properties:
+            username: { type: string }
+            role: { type: string }
+    Dashboard:
+      type: object
+      required: [totalCrimes, activeInvestigations, repeatOffenders, hotspotDistricts, trend, recentIncidents]
+      properties:
+        totalCrimes: { type: integer }
+        activeInvestigations: { type: integer }
+        repeatOffenders: { type: integer }
+        hotspotDistricts: { type: integer }
+        trend:
+          type: array
+          items: { $ref: "#/components/schemas/MonthlyTrend" }
+        recentIncidents:
+          type: array
+          items: { $ref: "#/components/schemas/CrimeEvent" }
+    MonthlyTrend:
+      type: object
+      required: [month, total]
+      properties:
+        month: { type: string }
+        total: { type: integer }
+    Hotspot:
+      type: object
+      required: [district, latitude, longitude, crimeCount, intensity]
+      properties:
+        district: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        crimeCount: { type: integer }
+        intensity: { type: number }
+    TrendAnalytics:
+      type: object
+      required: [byMonth, byDistrict]
+      properties:
+        byMonth:
+          type: array
+          items: { $ref: "#/components/schemas/MonthlyTrend" }
+        byDistrict:
+          type: array
+          items: { $ref: "#/components/schemas/CategoryCount" }
+    CategoryCount:
+      type: object
+      required: [label, count]
+      properties:
+        label: { type: string }
+        count: { type: integer }
+    OffenderRanking:
+      type: object
+      required: [id, name, riskScore, incidents, status]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        riskScore: { type: number }
+        incidents: { type: integer }
+        status: { type: string }
+    ProgressCount:
+      type: object
+      required: [label, count, color]
+      properties:
+        label: { type: string }
+        count: { type: integer }
+        color: { type: string }
+    CrimeEvent:
+      type: object
+      required: [id, firNumber, crimeType, district, policeStation, date, status]
+      properties:
+        id: { type: integer }
+        firNumber: { type: string }
+        crimeType: { type: string }
+        district: { type: string }
+        policeStation: { type: string }
+        date: { type: string }
+        status: { type: string }
+        severity: { type: string }
+        summary: { type: string }
+    NetworkNode:
+      type: object
+      required: [id, label, type, data]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        type: { type: string }
+        data: { type: object, additionalProperties: true }
+    NetworkEdge:
+      type: object
+      required: [id, source, target, relationshipType, confidenceScore]
+      properties:
+        id: { type: string }
+        source: { type: string }
+        target: { type: string }
+        relationshipType: { type: string }
+        confidenceScore: { type: number }
+    NetworkGraph:
+      type: object
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items: { $ref: "#/components/schemas/NetworkNode" }
+        edges:
+          type: array
+          items: { $ref: "#/components/schemas/NetworkEdge" }
+    OffenderProfile:
+      type: object
+      required: [id, name, age, gender, riskScore, modusOperandi, criminalHistory, crimes]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        age: { type: integer }
+        gender: { type: string }
+        riskScore: { type: number }
+        modusOperandi: { type: string }
+        criminalHistory: { type: integer }
+        crimes:
+          type: array
+          items: { $ref: "#/components/schemas/CrimeEvent" }
+    Prediction:
+      type: object
+      required: [predictionType, prediction, confidenceScore, reasoning, supportingRecords]
+      properties:
+        predictionType: { type: string }
+        prediction: { type: string }
+        confidenceScore: { type: number }
+        reasoning:
+          type: array
+          items: { type: string }
+        supportingRecords:
+          type: array
+          items: { type: string }
+        generatedAt: { type: string }
+    ChatInput:
+      type: object
+      required: [question]
+      properties:
+        question: { type: string }
+    ChatResponse:
+      allOf:
+        - $ref: "#/components/schemas/Prediction"
+        - type: object
+          required: [answer]
+          properties:
+            answer: { type: string }
