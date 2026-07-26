@@ -1,0 +1,73 @@
+The project is already working correctly. Do NOT rewrite or replace the existing architecture.
+
+Your goal is to transform this into a polished hackathon-winning prototype while preserving all existing APIs and functionality.
+
+Tasks:
+
+1. Replace all placeholder charts with professional interactive Recharts visualizations:
+   - Crime trends (Line Chart)
+   - Crime categories (Bar Chart)
+   - District comparison (Horizontal Bar)
+   - Investigation status (Pie/Donut)
+   - Monthly incidents (Area Chart)
+
+2. Improve the Network Explorer:
+   - Better node styling
+   - Animated edges
+   - Zoom, pan, fit-to-screen
+   - Search for suspects/cases
+   - Highlight connected nodes when selected
+
+3. Upgrade the AI Predictions page:
+   - Display confidence scores as animated progress bars
+   - Color-code prediction severity
+   - Better cards with icons
+   - Add expandable reasoning and supporting evidence
+
+4. Build a professional AI Assistant page using the existing /api/chat endpoint.
+   - Modern chat UI
+   - Conversation history
+   - Suggested questions
+   - Typing indicator
+   - Loading animation
+   - Display confidenceScore, reasoning, and supportingRecords cleanly.
+
+5. Improve Dashboard UI:
+   - Animated statistic cards
+   - Skeleton loading
+   - Better spacing
+   - Hover animations
+   - Responsive improvements
+   - KPI cards with trend indicators
+
+6. Improve Incident Timeline:
+   - Timeline animation
+   - Better cards
+   - Filters
+   - Search
+   - Status badges
+
+7. Add a global search bar that searches:
+   - FIR ID
+   - District
+   - Crime category
+   - Offender
+   - Investigation
+
+8. Add a "Generate Investigation Report" button that exports a professional PDF summary for the currently selected case.
+
+9. Improve overall UX:
+   - Toast notifications
+   - Empty states
+   - Better error messages
+   - Smooth page transitions
+   - Keyboard shortcuts where appropriate
+
+Requirements:
+- Do NOT remove any existing feature.
+- Do NOT break the OpenAPI contracts.
+- Do NOT change backend endpoints unless absolutely necessary.
+- Keep the same deep-slate + signal-green design language.
+- Maintain Windows and Linux compatibility.
+- Ensure `pnpm install`, `pnpm dev`, and `pnpm build` all work successfully.
+- At the end, provide a detailed changelog of every modification.
