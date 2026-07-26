@@ -1,0 +1,65 @@
+I want to run this project locally on Windows 10/11 using VS Code, Node.js, and pnpm instead of the Replit environment.
+
+Please convert the entire project to be fully Windows-compatible and verify that it runs locally without any manual fixes.
+
+Requirements:
+
+1. Remove all Linux/Replit-specific commands and scripts.
+   - Remove or replace any use of:
+     - sh
+     - rm
+     - chmod
+     - bash
+     - Linux-only shell syntax
+   - Make all scripts compatible with Windows Command Prompt and PowerShell.
+
+2. Update package.json files so that:
+   - pnpm install completes successfully on Windows.
+   - pnpm dev starts without errors.
+   - pnpm build works.
+   - pnpm typecheck works.
+
+3. Fix all Vite/Rollup compatibility issues.
+   - The current project throws:
+     "parse is not a function"
+   - Resolve the dependency/version issue instead of providing workarounds.
+   - Ensure the correct Rollup native package is installed.
+
+4. Make the project compatible with Node.js 22 LTS.
+   - Update dependency versions if required.
+   - Remove anything incompatible with Node 22.
+
+5. Environment variables
+   - Provide a .env.example file.
+   - Give sensible default values for:
+     PORT
+     BASE_PATH
+     and any other required variables.
+   - The project should run even if the user only copies .env.example to .env.
+
+6. Local Development
+   After cloning the repository, these should be the ONLY commands required:
+
+   pnpm install
+   pnpm dev
+
+   No additional fixes should be necessary.
+
+7. Verify the project works on Windows by testing:
+   - pnpm install
+   - pnpm dev
+   - Browser loads correctly
+   - No Vite errors
+   - No Rollup errors
+   - No React runtime errors
+
+8. If any package is intended only for Replit, replace it with an equivalent solution that works locally.
+
+9. If configuration files need changes (vite.config.ts, tsconfig.json, package.json, etc.), update them automatically.
+
+10. Finally, provide:
+   - The modified files.
+   - A summary of every change made.
+   - Exact commands to run on Windows from a fresh clone.
+
+The goal is a clean Windows-native project that works in VS Code without Replit.

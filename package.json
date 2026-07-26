@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "preinstall": "node -e \"const ua=process.env.npm_config_user_agent||'';if(ua&&!ua.startsWith('pnpm/')){process.stderr.write('ERROR: Please use pnpm to install dependencies.\\n');process.exit(1)}\"",
+    "dev": "concurrently -n \"api,web\" -c \"cyan,green\" \"pnpm --filter @workspace/api-server run dev\" \"pnpm --filter @workspace/crime-intelligence run dev\"",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
@@ -13,6 +14,8 @@
     "@replit/connectors-sdk": "^0.4.1"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "prettier": "^3.9.5",
     "typescript": "~5.9.3"
   }
