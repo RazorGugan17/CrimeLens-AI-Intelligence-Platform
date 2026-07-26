@@ -169,64 +169,122 @@ function Login({ onSignIn, onSignUp, pending, signupPending, error, signupError 
           <div className="mb-10 lg:hidden"><Brand /></div>
           <div className="mb-8">
             <div className="font-mono text-[10px] uppercase tracking-[.22em] text-slate-500">Restricted access</div>
-            <h2 className="mt-3 font-display text-4xl tracking-[-.04em]">Sign in to CrimeLens</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">Use your assigned prototype identity to enter the intelligence workspace.</p>
+            <h2 className="mt-3 font-display text-4xl tracking-[-.04em]">
+              {mode === 'login' ? 'Sign in to CrimeLens' : 'Create your CrimeLens account'}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              {mode === 'login'
+                ? 'Use your assigned prototype identity to enter the intelligence workspace.'
+                : 'Create a new operational account and choose your role to join the intelligence workspace.'}
+            </p>
           </div>
 
           <div className="mb-6 flex rounded-lg border border-slate-200 bg-slate-50 p-1">
-            <button type="button" onClick={() => setMode('login')} className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${mode === 'login' ? 'bg-[#172735] text-white shadow-sm' : 'text-slate-600'}`}>Sign in</button>
-            <button type="button" onClick={() => setMode('signup')} className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${mode === 'signup' ? 'bg-[#172735] text-white shadow-sm' : 'text-slate-600'}`}>Create account</button>
+            <button type="button" onClick={() => {
+              setMode('login');
+              setConfirmPassword('');
+            }} className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${mode === 'login' ? 'bg-[#172735] text-white shadow-sm' : 'text-slate-600'}`}>Sign in</button>
+            <button type="button" onClick={() => {
+              setMode('signup');
+              setConfirmPassword('');
+            }} className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${mode === 'signup' ? 'bg-[#172735] text-white shadow-sm' : 'text-slate-600'}`}>Create account</button>
           </div>
 
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (mode === 'login') {
-              if (username.trim() && password.trim()) onSignIn(username.trim(), password.trim(), role);
-            } else if (username.trim() && password.trim() && confirmPassword.trim() && password === confirmPassword) {
-              onSignUp(username.trim(), password.trim(), role);
-            }
-          }} className="space-y-5">
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Officer username</span>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter your username"
-                className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15" data-testid="input-username" />
-            </label>
+          {(() => {
+            const isLogin = mode === 'login';
+            const loginPending = typeof pending === 'boolean' ? pending : false;
+            const signUpPendingFlag = typeof signupPending === 'boolean' ? signupPending : false;
+            const hasUsername = username.trim().length > 0;
+            const hasPassword = password.trim().length > 0;
+            const hasConfirm = confirmPassword.trim().length > 0;
+            const passwordsMatch = password === confirmPassword;
+            const canSubmit = isLogin
+              ? hasUsername && hasPassword
+              : hasUsername && hasPassword && hasConfirm && passwordsMatch;
+            const isSubmitDisabled = !canSubmit || (isLogin ? loginPending : signUpPendingFlag);
+            const showPasswordMismatch = mode === 'signup' && hasConfirm && hasPassword && !passwordsMatch;
+            const showConfirmRequired = mode === 'signup' && hasPassword && !hasConfirm;
 
-            <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Password</span>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password"
-                className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15" data-testid="input-password" />
-            </label>
+            return (
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (isLogin) {
+                  if (hasUsername && hasPassword) onSignIn(username.trim(), password.trim(), role);
+                } else if (hasUsername && hasPassword && hasConfirm && passwordsMatch) {
+                  onSignUp(username.trim(), password.trim(), role);
+                }
+              }} className="space-y-5">
+                <label className="block">
+                  <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Officer username</span>
+                  <input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    onInput={(e) => setUsername((e.target as HTMLInputElement).value)}
+                    autoComplete="username"
+                    placeholder="Enter your username"
+                    className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15"
+                    data-testid="input-username"
+                  />
+                </label>
 
-            {mode === 'signup' && (
-              <label className="block">
-                <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Confirm password</span>
-                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password"
-                  className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15" data-testid="input-confirm-password" />
-              </label>
-            )}
+                <label className="block">
+                  <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Password</span>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    placeholder="Enter your password"
+                    className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15"
+                    data-testid="input-password"
+                  />
+                </label>
 
-            <div>
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Operational role</span>
-              <div className="grid grid-cols-2 gap-2">
-                {(['Investigator', 'Analyst', 'Supervisor', 'Admin'] as const).map((item) => (
-                  <button type="button" key={item} onClick={() => setRole(item)}
-                    className={`rounded-lg border px-3 py-3 text-left text-sm font-semibold transition ${role === item ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'}`}
-                    data-testid={`button-role-${item.toLowerCase()}`}>
-                    <span className={`mr-2 inline-block h-2 w-2 rounded-full ${role === item ? 'bg-emerald-500' : 'bg-slate-300'}`} />{item}
-                  </button>
-                ))}
-              </div>
-            </div>
+                {mode === 'signup' && (
+                  <label className="block">
+                    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Confirm password</span>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onInput={(e) => setConfirmPassword((e.target as HTMLInputElement).value)}
+                      autoComplete="new-password"
+                      placeholder="Re-enter your password"
+                      className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15"
+                      data-testid="input-confirm-password"
+                    />
+                    {(showPasswordMismatch || showConfirmRequired) && (
+                      <p className="mt-2 text-sm text-rose-600">
+                        {showPasswordMismatch ? 'Passwords must match to create an account.' : 'Please confirm your password before continuing.'}
+                      </p>
+                    )}
+                  </label>
+                )}
 
-            {!!(mode === 'login' ? error : signupError) && <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700" data-testid="login-error">{mode === 'login' ? 'Sign in was not accepted. Check the identity and try again.' : 'Account creation was not accepted. Choose another username or password.'}</div>}
+                <div>
+                  <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Operational role</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['Investigator', 'Analyst', 'Supervisor', 'Admin'] as const).map((item) => (
+                      <button type="button" key={item} onClick={() => setRole(item)}
+                        className={`rounded-lg border px-3 py-3 text-left text-sm font-semibold transition ${role === item ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'}`}
+                        data-testid={`button-role-${item.toLowerCase()}`}>
+                        <span className={`mr-2 inline-block h-2 w-2 rounded-full ${role === item ? 'bg-emerald-500' : 'bg-slate-300'}`} />{item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <button disabled={mode === 'login' ? (!username.trim() || !password.trim() || pending) : (!username.trim() || !password.trim() || !confirmPassword.trim() || password !== confirmPassword || signupPending)}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#172735] font-bold text-white transition hover:bg-[#203c4c] disabled:cursor-not-allowed disabled:opacity-50"
-              data-testid="button-sign-in">
-              {mode === 'login' ? (pending ? 'Verifying identity…' : 'Enter command centre') : (signupPending ? 'Creating account…' : 'Create account')} <ChevronRight size={17} />
-            </button>
-          </form>
+                {!!(isLogin ? error : signupError) && <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700" data-testid="login-error">{isLogin ? 'Sign in was not accepted. Check the identity and try again.' : 'Account creation was not accepted. Choose another username or password.'}</div>}
+
+                <button type="submit" disabled={isSubmitDisabled}
+                  className={`flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#172735] hover:bg-[#203c4c] font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50`}
+                  data-testid="button-sign-in">
+                  {isLogin ? (loginPending ? 'Verifying identity…' : 'Enter command centre') : (signUpPendingFlag ? 'Creating account…' : 'Create account')} <ChevronRight size={17} />
+                </button>
+              </form>
+            );
+          })()}
 
           <p className="mt-8 text-center font-mono text-[10px] uppercase tracking-[.17em] text-slate-400">All activity is logged for evidentiary integrity</p>
         </div>

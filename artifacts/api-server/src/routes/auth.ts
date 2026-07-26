@@ -76,7 +76,7 @@ function parseCredentials(reqBody: unknown): { username: string; password: strin
 router.post("/auth/login", (req, res): void => {
   const parsed = parseCredentials(req.body);
   if (!parsed) {
-    res.status(400).json({ error: "username, password, and role are required" });
+    res.status(400).json({ error: "username and password are required" });
     return;
   }
 
@@ -85,15 +85,11 @@ router.post("/auth/login", (req, res): void => {
   const credential = accounts.get(username);
 
   if (!credential || credential.password !== password) {
-    res.status(401).json({ error: "Invalid username, password, or role" });
+    res.status(401).json({ error: "Invalid username or password" });
     return;
   }
 
-  const role = parsed.role ?? credential.role;
-  if (parsed.role && parsed.role !== credential.role) {
-    res.status(401).json({ error: "Invalid username, password, or role" });
-    return;
-  }
+  const role = credential.role;
 
   res.json(
     LoginResponse.parse({

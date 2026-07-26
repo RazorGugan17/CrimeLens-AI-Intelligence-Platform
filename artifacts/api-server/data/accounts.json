@@ -22,5 +22,21 @@
   "newuser2": {
     "password": "newpass123",
     "role": "Analyst"
+  },
+  "gugan": {
+    "password": "gugan@2006",
+    "role": "Investigator"
+  },
+  "gugan7": {
+    "password": "gugan@2007",
+    "role": "Investigator"
+  },
+  "newuser": {
+    "password": "newpass",
+    "role": "Investigator"
+  },
+  "random": {
+    "password": "random@2006",
+    "role": "Investigator"
   }
 }
