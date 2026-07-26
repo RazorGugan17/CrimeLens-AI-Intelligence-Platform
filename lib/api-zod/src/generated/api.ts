@@ -22,6 +22,7 @@ export const HealthCheckResponse = zod.object({
  */
 export const LoginBody = zod.object({
   "username": zod.string(),
+  "password": zod.string(),
   "role": zod.enum(['Admin', 'Investigator', 'Analyst', 'Supervisor'])
 })
 

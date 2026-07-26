@@ -22,6 +22,7 @@ export const LoginInputRole = {
 
 export interface LoginInput {
   username: string;
+  password: string;
   role: LoginInputRole;
 }
 

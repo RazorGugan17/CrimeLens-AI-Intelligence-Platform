@@ -9,5 +9,6 @@ import type { LoginInputRole } from './loginInputRole';
 
 export interface LoginInput {
   username: string;
+  password: string;
   role: LoginInputRole;
 }

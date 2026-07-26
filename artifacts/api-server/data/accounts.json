@@ -1,0 +1,26 @@
+{
+  "investigator": {
+    "password": "invest123",
+    "role": "Investigator"
+  },
+  "analyst": {
+    "password": "analyst123",
+    "role": "Analyst"
+  },
+  "supervisor": {
+    "password": "super123",
+    "role": "Supervisor"
+  },
+  "admin": {
+    "password": "admin123",
+    "role": "Admin"
+  },
+  "razor": {
+    "password": "razor@2007",
+    "role": "Admin"
+  },
+  "newuser2": {
+    "password": "newpass123",
+    "role": "Analyst"
+  }
+}

@@ -258,9 +258,10 @@ components:
         service: { type: string }
     LoginInput:
       type: object
-      required: [username, role]
+      required: [username, password, role]
       properties:
         username: { type: string }
+        password: { type: string }
         role:
           type: string
           enum: [Admin, Investigator, Analyst, Supervisor]

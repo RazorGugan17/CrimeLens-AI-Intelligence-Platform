@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
@@ -7,7 +7,7 @@ import {
   LayoutDashboard, LogOut, Menu, MessageSquare, Network, Search, ShieldCheck, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { setAuthTokenGetter, useLogin } from '@workspace/api-client-react';
+import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 
 import { GlobalSearch } from '@/components/GlobalSearch';
 import Overview from '@/pages/Overview';
@@ -36,6 +36,9 @@ const nav = [
 /* ─── Auth ──────────────────────────────────────────────────────── */
 type Session = { username: string; role: string; token: string };
 
+// Use relative /api paths so Vite can proxy local requests during development.
+setBaseUrl(null);
+
 setAuthTokenGetter(() => {
   try {
     const s = JSON.parse(localStorage.getItem('crimelens-session') || 'null') as Session | null;
@@ -47,25 +50,67 @@ function useSession() {
   const [session, setSession] = useState<Session | null>(() => {
     try { return JSON.parse(localStorage.getItem('crimelens-session') || 'null'); } catch { return null; }
   });
-  const login = useLogin();
 
-  const signIn = (username: string, role: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor') => {
-    login.mutate({ data: { username, role } }, {
+  const loginMutation = useMutation({
+    mutationFn: async ({ username, password, role }: { username: string; password: string; role: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor' }) => {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(typeof data?.error === 'string' ? data.error : 'Authentication failed');
+      }
+      return data as { token: string; user: { username: string; role: string } };
+    },
+  });
+
+  const signup = useMutation({
+    mutationFn: async ({ username, password, role }: { username: string; password: string; role: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor' }) => {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(typeof data?.error === 'string' ? data.error : 'Account creation failed');
+      }
+      return data as { token: string; user: { username: string; role: string } };
+    },
+  });
+
+  const signIn = (username: string, password: string, role: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor') => {
+    loginMutation.mutate({ username, password, role }, {
       onSuccess: (result) => {
         const nextSession = { ...result.user, token: result.token };
         localStorage.setItem('crimelens-session', JSON.stringify(nextSession));
         setSession(nextSession);
         toast.success(`Welcome, ${result.user.username}`);
       },
-      onError: () => toast.error('Authentication failed. Please try again.'),
+      onError: (error) => toast.error(error instanceof Error ? error.message : 'Authentication failed. Please try again.'),
     });
   };
+
+  const signUp = (username: string, password: string, role: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor') => {
+    signup.mutate({ username, password, role }, {
+      onSuccess: (result) => {
+        const nextSession = { ...result.user, token: result.token };
+        localStorage.setItem('crimelens-session', JSON.stringify(nextSession));
+        setSession(nextSession);
+        toast.success(`Account created for ${result.user.username}`);
+      },
+      onError: (error) => toast.error(error instanceof Error ? error.message : 'Account creation failed. Please try again.'),
+    });
+  };
+
   const signOut = () => {
     localStorage.removeItem('crimelens-session');
     setSession(null);
     toast.success('Signed out successfully');
   };
-  return { session, signIn, signOut, login };
+  return { session, signIn, signUp, signOut, login: loginMutation, signup };
 }
 
 /* ─── Brand ─────────────────────────────────────────────────────── */
@@ -88,11 +133,15 @@ function Brand({ light = false }: { light?: boolean }) {
 }
 
 /* ─── Login ─────────────────────────────────────────────────────── */
-function Login({ onSignIn, pending, error }: {
-  onSignIn: (u: string, r: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor') => void;
-  pending: boolean; error: unknown;
+function Login({ onSignIn, onSignUp, pending, signupPending, error, signupError }: {
+  onSignIn: (u: string, p: string, r: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor') => void;
+  onSignUp: (u: string, p: string, r: 'Admin' | 'Investigator' | 'Analyst' | 'Supervisor') => void;
+  pending: boolean; signupPending: boolean; error: unknown; signupError: unknown;
 }) {
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'Investigator' | 'Analyst' | 'Supervisor' | 'Admin'>('Investigator');
 
   return (
@@ -124,12 +173,38 @@ function Login({ onSignIn, pending, error }: {
             <p className="mt-3 text-sm leading-6 text-slate-500">Use your assigned prototype identity to enter the intelligence workspace.</p>
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); if (username.trim()) onSignIn(username.trim(), role); }} className="space-y-5">
+          <div className="mb-6 flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+            <button type="button" onClick={() => setMode('login')} className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${mode === 'login' ? 'bg-[#172735] text-white shadow-sm' : 'text-slate-600'}`}>Sign in</button>
+            <button type="button" onClick={() => setMode('signup')} className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${mode === 'signup' ? 'bg-[#172735] text-white shadow-sm' : 'text-slate-600'}`}>Create account</button>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (mode === 'login') {
+              if (username.trim() && password.trim()) onSignIn(username.trim(), password.trim(), role);
+            } else if (username.trim() && password.trim() && confirmPassword.trim() && password === confirmPassword) {
+              onSignUp(username.trim(), password.trim(), role);
+            }
+          }} className="space-y-5">
             <label className="block">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Officer identity</span>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter your name"
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Officer username</span>
+              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter your username"
                 className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15" data-testid="input-username" />
             </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Password</span>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password"
+                className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15" data-testid="input-password" />
+            </label>
+
+            {mode === 'signup' && (
+              <label className="block">
+                <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Confirm password</span>
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password"
+                  className="h-12 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15" data-testid="input-confirm-password" />
+              </label>
+            )}
 
             <div>
               <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Operational role</span>
@@ -144,12 +219,12 @@ function Login({ onSignIn, pending, error }: {
               </div>
             </div>
 
-            {!!error && <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700" data-testid="login-error">Sign in was not accepted. Check the identity and try again.</div>}
+            {!!(mode === 'login' ? error : signupError) && <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700" data-testid="login-error">{mode === 'login' ? 'Sign in was not accepted. Check the identity and try again.' : 'Account creation was not accepted. Choose another username or password.'}</div>}
 
-            <button disabled={!username.trim() || pending}
+            <button disabled={mode === 'login' ? (!username.trim() || !password.trim() || pending) : (!username.trim() || !password.trim() || !confirmPassword.trim() || password !== confirmPassword || signupPending)}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#172735] font-bold text-white transition hover:bg-[#203c4c] disabled:cursor-not-allowed disabled:opacity-50"
               data-testid="button-sign-in">
-              {pending ? 'Verifying identity…' : 'Enter command centre'} <ChevronRight size={17} />
+              {mode === 'login' ? (pending ? 'Verifying identity…' : 'Enter command centre') : (signupPending ? 'Creating account…' : 'Create account')} <ChevronRight size={17} />
             </button>
           </form>
 
@@ -279,7 +354,7 @@ function AppWithProviders() {
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       {auth.session
         ? <AppRoutes session={auth.session} onSignOut={auth.signOut} />
-        : <Login onSignIn={auth.signIn} pending={auth.login.isPending} error={auth.login.error} />
+        : <Login onSignIn={auth.signIn} onSignUp={auth.signUp} pending={auth.login.isPending} signupPending={auth.signup.isPending} error={auth.login.error} signupError={auth.signup.error} />
       }
     </WouterRouter>
   );

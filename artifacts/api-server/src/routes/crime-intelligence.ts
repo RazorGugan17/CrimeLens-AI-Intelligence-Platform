@@ -46,37 +46,36 @@ function parseId(value: string | string[] | undefined): number | null {
 
 export function createCrimeRouter(repository: CrimeRepository): IRouter {
   const router: IRouter = Router();
-  router.use(requireAuth);
 
-  router.get("/dashboard", (_req, res): void => {
+  router.get("/dashboard", requireAuth, (_req, res): void => {
     res.json(GetDashboardResponse.parse(dashboard(repository)));
   });
 
-  router.get("/hotspots", (_req, res): void => {
+  router.get("/hotspots", requireAuth, (_req, res): void => {
     res.json(GetHotspotsResponse.parse(hotspots(repository)));
   });
 
-  router.get("/analytics/trends", (_req, res): void => {
+  router.get("/analytics/trends", requireAuth, (_req, res): void => {
     res.json(GetCrimeTrendsResponse.parse(trends(repository)));
   });
 
-  router.get("/analytics/categories", (_req, res): void => {
+  router.get("/analytics/categories", requireAuth, (_req, res): void => {
     res.json(GetCategoryDistributionResponse.parse(categoryDistribution(repository)));
   });
 
-  router.get("/analytics/offenders", (_req, res): void => {
+  router.get("/analytics/offenders", requireAuth, (_req, res): void => {
     res.json(GetRepeatOffenderRankingResponse.parse(offenderRanking(repository)));
   });
 
-  router.get("/analytics/investigations", (_req, res): void => {
+  router.get("/analytics/investigations", requireAuth, (_req, res): void => {
     res.json(GetInvestigationProgressResponse.parse(investigationProgress(repository)));
   });
 
-  router.get("/analytics/timeline", (_req, res): void => {
+  router.get("/analytics/timeline", requireAuth, (_req, res): void => {
     res.json(GetCrimeTimelineResponse.parse(timeline(repository)));
   });
 
-  router.get("/network/:offenderId", (req, res): void => {
+  router.get("/network/:offenderId", requireAuth, (req, res): void => {
     const params = GetOffenderNetworkParams.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ error: params.error.message });
@@ -125,7 +124,7 @@ export function createCrimeRouter(repository: CrimeRepository): IRouter {
     );
   });
 
-  router.get("/offenders/:offenderId", (req, res): void => {
+  router.get("/offenders/:offenderId", requireAuth, (req, res): void => {
     const params = GetOffenderParams.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ error: params.error.message });
@@ -144,20 +143,20 @@ export function createCrimeRouter(repository: CrimeRepository): IRouter {
     );
   });
 
-  router.get("/predictions/hotspots", (_req, res): void => {
+  router.get("/predictions/hotspots", requireAuth, (_req, res): void => {
     res.json(PredictHotspotResponse.parse(predictHotspot(repository)));
   });
-  router.get("/predictions/offender-risk", (_req, res): void => {
+  router.get("/predictions/offender-risk", requireAuth, (_req, res): void => {
     res.json(PredictOffenderRiskResponse.parse(predictOffenderRisk(repository)));
   });
-  router.get("/predictions/anomalies", (_req, res): void => {
+  router.get("/predictions/anomalies", requireAuth, (_req, res): void => {
     res.json(DetectAnomaliesResponse.parse(detectAnomalies(repository)));
   });
-  router.get("/predictions/category-forecast", (_req, res): void => {
+  router.get("/predictions/category-forecast", requireAuth, (_req, res): void => {
     res.json(ForecastCrimeCategoryResponse.parse(forecastCategory(repository)));
   });
 
-  router.post("/chat", (req, res): void => {
+  router.post("/chat", requireAuth, (req, res): void => {
     const parsed = AskCrimeLensBody.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.message });
